@@ -6,7 +6,7 @@ BUILDTAGS=
 TAG?=0.9.0-beta.12
 REGISTRY?=gcr.io/google_containers
 GOOS?=linux
-DOCKER?=docker
+DOCKER?=gcloud docker --
 SED_I?=sed -i
 GOHOSTOS ?= $(shell go env GOHOSTOS)
 
