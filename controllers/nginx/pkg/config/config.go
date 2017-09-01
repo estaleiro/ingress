@@ -465,6 +465,7 @@ type TemplateConfig struct {
 	Cfg                     Configuration
 	IsIPV6Enabled           bool
 	IsSSLPassthroughEnabled bool
+	IsPublishLoadBalancer bool
 	RedirectServers         map[string]string
 	ListenPorts             *ListenPorts
 }

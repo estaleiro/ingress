@@ -139,7 +139,8 @@ type Configuration struct {
 	DefaultHealthzURL     string
 	DefaultIngressClass   string
 	// optional
-	PublishService string
+	PublishService        string
+	IsPublishLoadBalancer bool
 	// Backend is the particular implementation to be used.
 	// (for instance NGINX)
 	Backend ingress.Controller
@@ -366,6 +367,11 @@ func (ic GenericController) Info() *ingress.BackendInfo {
 // IngressClass returns information about the backend
 func (ic GenericController) IngressClass() string {
 	return ic.cfg.IngressClass
+}
+
+// PublishLoadBalancer returns a boolean about if publish service is a Load Balancer
+func (ic GenericController) PublishLoadBalancer() bool {
+	return ic.cfg.IsPublishLoadBalancer
 }
 
 // GetDefaultBackend returns the default backend

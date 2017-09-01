@@ -677,6 +677,7 @@ func (n *NGINXController) OnUpdate(ingressCfg ingress.Configuration) error {
 		IsIPV6Enabled:           n.isIPV6Enabled && !cfg.DisableIpv6,
 		RedirectServers:         redirectServers,
 		IsSSLPassthroughEnabled: n.isSSLPassthroughEnabled,
+		IsPublishLoadBalancer:   n.controller.PublishLoadBalancer(),
 		ListenPorts:             n.ports,
 	}
 

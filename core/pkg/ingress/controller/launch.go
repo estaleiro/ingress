@@ -130,12 +130,15 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 	}
 	glog.Infof("validated %v as the default backend", *defaultSvc)
 
+	var isPublishLoadBalancer bool
 	if *publishSvc != "" {
 		svc, err := k8s.IsValidService(kubeClient, *publishSvc)
 		if err != nil {
 			glog.Fatalf("no service with name %v found: %v", *publishSvc, err)
 		}
-
+		if svc.Spec.Type == "LoadBalancer" {
+			isPublishLoadBalancer = true
+		}
 		if len(svc.Status.LoadBalancer.Ingress) == 0 {
 			if len(svc.Spec.ExternalIPs) > 0 {
 				glog.Infof("service %v validated as assigned with externalIP", *publishSvc)
@@ -147,6 +150,7 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 			glog.Infof("service %v validated as source of Ingress status", *publishSvc)
 		}
 	}
+	glog.Infof("Setting Publush Load Balancer to: %v", isPublishLoadBalancer)
 
 	if *watchNamespace != "" {
 
@@ -181,6 +185,7 @@ func NewIngressController(backend ingress.Controller) *GenericController {
 		DefaultSSLCertificate:   *defSSLCertificate,
 		DefaultHealthzURL:       *defHealthzURL,
 		PublishService:          *publishSvc,
+		IsPublishLoadBalancer:   isPublishLoadBalancer,
 		Backend:                 backend,
 		ForceNamespaceIsolation: *forceIsolation,
 		UpdateStatusOnShutdown:  *updateStatusOnShutdown,
