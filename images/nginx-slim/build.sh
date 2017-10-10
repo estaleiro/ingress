@@ -22,6 +22,8 @@ export NDK_VERSION=0.3.0
 export VTS_VERSION=0.1.15
 export SETMISC_VERSION=0.31
 export STICKY_SESSIONS_VERSION=08a395c66e42
+export MODSECURITY=a2427df27f482c64ea8666dca9552c67d3a68904
+export MODSECURITY_NGINX=a2a5858d249222938c2f5e48087a922c63d7f9d8
 export MORE_HEADERS_VERSION=0.32
 export NGINX_DIGEST_AUTH=7955af9c77598c697ac292811914ce1e2b3b824c
 export NGINX_SUBSTITUTIONS=bc58cb11844bc42735bbaef7085ea86ace46d05b
@@ -74,7 +76,8 @@ apt-get update && apt-get install --no-install-recommends -y \
   libperl-dev \
   cmake \
   libcurl4-openssl-dev \
-  linux-headers-generic || exit 1
+  linux-headers-generic \
+  flex bison doxygen libyajl-dev libtool dh-autoreconf libpcre++-dev libxml2-dev pkgconf git || exit 1
 
 
 # download, verify and extract the source files
@@ -111,6 +114,11 @@ get_src d1afc7c38bef055ac8a3759f117281b9d9287785e044a7d4e79134fa6ea99324 \
 get_src c9961b503da1119eaeb15393bac804a303d49d86f701dbfd31c425d2214354d5 \
         "https://github.com/rnburn/zipkin-cpp-opentracing/archive/$ZIPKIN_CPP.tar.gz"
 
+get_src 3abdecedb5bf544eeba8c1ce0bef2da6a9f064b216ebbe20b68894afec1d7d80 \
+        "https://github.com/SpiderLabs/ModSecurity-nginx/archive/$MODSECURITY_NGINX.tar.gz"
+
+#get_src 5cda9dc366c9d9a48d965b4bc728a28aaba585890bf232c8c78311e1e7d7008c \
+#        "https://github.com/SpiderLabs/ModSecurity/archive/$MODSECURITY.tar.gz"
 
 #https://blog.cloudflare.com/optimizing-tls-over-tcp-to-reduce-latency/
 curl -sSL -o nginx__dynamic_tls_records.patch https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/nginx__1.11.5_dynamic_tls_records.patch
@@ -134,6 +142,19 @@ cmake -DBUILD_SHARED_LIBS=1 ..
 make
 make install
 
+# build modsecurity lib
+
+cd "$BUILD_PATH/"
+git clone https://github.com/SpiderLabs/ModSecurity
+cd ModSecurity
+git checkout -b v3/master origin/v3/master
+sh build.sh
+git submodule init && git submodule update
+./configure --prefix=/usr/local/modsec
+make
+make install
+export MODSECURITY_INC="/usr/local/modsec/include"
+export MODSECURITY_LIB="/usr/local/modsec/lib"
 
 # build nginx
 cd "$BUILD_PATH/nginx-$NGINX_VERSION"
@@ -199,6 +220,7 @@ fi
   --add-module="$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH" \
   --add-module="$BUILD_PATH/ngx_http_substitutions_filter_module-$NGINX_SUBSTITUTIONS" \
   --add-module="$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING" \
+  --add-dynamic-module="$BUILD_PATH/ModSecurity-nginx-$MODSECURITY_NGINX"
   && make || exit 1 \
   && make install || exit 1
 
@@ -215,7 +237,7 @@ apt-mark unmarkauto \
   libaio1 \
   xz-utils \
   geoip-bin \
-  openssl
+  openssl libyajl2 libpcre++0v5 libxml2
 
 apt-get remove -y --purge \
   build-essential \
@@ -228,7 +250,8 @@ apt-get remove -y --purge \
   libaio-dev \
   linux-libc-dev \
   perl-modules-5.22 \
-  linux-headers-generic
+  linux-headers-generic \
+  flex bison doxygen libyajl-dev libtool dh-autoreconf libpcre++-dev libxml2-dev pkgconf git
 
 apt-get autoremove -y
 
@@ -238,6 +261,7 @@ mv /usr/share/nginx/sbin/nginx /usr/sbin
 
 rm -rf "$BUILD_PATH"
 rm -Rf /usr/share/man /usr/share/doc
+rm -rf /usr/local/modsec/include /usr/local/modsec/bin /usr/local/modsec/lib/libmodsecurity.a
 rm -rf /tmp/* /var/tmp/*
 rm -rf /var/lib/apt/lists/*
 rm -rf /var/cache/apt/archives/*
