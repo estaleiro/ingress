@@ -220,8 +220,9 @@ fi
   --add-module="$BUILD_PATH/nginx-http-auth-digest-$NGINX_DIGEST_AUTH" \
   --add-module="$BUILD_PATH/ngx_http_substitutions_filter_module-$NGINX_SUBSTITUTIONS" \
   --add-module="$BUILD_PATH/nginx-opentracing-$NGINX_OPENTRACING" \
-  --add-dynamic-module="$BUILD_PATH/ModSecurity-nginx-$MODSECURITY_NGINX"
+  --add-dynamic-module="$BUILD_PATH/ModSecurity-nginx-$MODSECURITY_NGINX" \
   && make || exit 1 \
+  && make modules || exit 1 \
   && make install || exit 1
 
 echo "Cleaning..."
